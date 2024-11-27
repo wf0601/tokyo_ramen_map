@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ramen Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.awesome-markers/dist/leaflet.awesome-markers.css" />
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tokyo Ramen Restaurants</h1>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.awesome-markers/dist/leaflet.awesome-markers.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([{{ markers[0].location[0] }}, {{ markers[0].location[1] }}], 12);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Add markers
+        var markers = {};
+        {% for marker in markers %}
+            var marker = L.marker([{{ marker.location[0] }}, {{ marker.location[1] }}], {
+                icon: L.AwesomeMarkers.icon({
+                    icon: 'info-sign',
+                    markerColor: '{{ marker.icon_color }}'
+                })
+            }).bindPopup(`
+                <div>
+                    <strong>{{ marker.popup|safe }}</strong>
+                </div>
+            `).addTo(map);
+
+            markers[{{ marker.idx }}] = marker;
+        {% endfor %}
+
+        // Function to toggle visited status
+        function toggleVisited(idx) {
+            fetch(`/toggle_visited/${idx}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var marker = markers[idx];
+                    var color = data.visited ? 'red' : 'blue';
+                    marker.setIcon(L.AwesomeMarkers.icon({
+                        icon: 'info-sign',
+                        markerColor: color
+                    }));
+                }
+            });
+        }
+    </script>
+</body>
+</html>
