@@ -7,7 +7,7 @@ app = Flask(__name__)
 # Load data
 data_path = os.path.join('data', 'tokyo_ramen_restaurants_all_info.csv')
 data = pd.read_csv(data_path)
-
+print(len(data))
 # Ensure 'visited' column exists
 if 'visited' not in data.columns:
     data['visited'] = False
@@ -23,7 +23,7 @@ def index():
         icon_color = 'red' if row['visited'] else 'blue'
         markers.append({
             'location': [row['latitude'], row['longitude']],
-            'popup': f"{row['name']}<br><input type='checkbox' id='checkbox_{idx}' onchange='toggleVisited({idx})' {'checked' if row['visited'] else ''}> Visited",
+            'popup': f"{row['name']} {row['rating']}<br><input type='checkbox' id='checkbox_{idx}' onchange='toggleVisited({idx})' {'checked' if row['visited'] else ''}> Visited",
             'icon_color': icon_color,
             'idx': idx
         })
