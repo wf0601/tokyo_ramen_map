@@ -15,7 +15,7 @@ if 'visited' not in data.columns:
 # Convert geo-coordinates
 data[['latitude', 'longitude']] = data['geo_coordinates'].str.split(',', expand=True).astype(float)
 
-@app.route('/')
+@app.route('/ramen')
 def index():
     # Generate marker data
     markers = []
@@ -42,4 +42,4 @@ def toggle_visited(idx):
     return jsonify(success=True, visited=data.at[idx, 'visited'])
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,port=5002)
