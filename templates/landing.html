@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 50px;
+        }
+        h1 {
+            color: #333;
+        }
+        .summary-box {
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+            background-color: #f9f9f9;
+        }
+        .roulette-box {
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 300px;
+            background-color: #f9f9f9;
+        }
+        /* Search bar styles */
+        .search-box {
+            margin: 20px auto;
+            padding: 10px;
+            width: 300px;
+        }
+        .search-box input {
+            width: 70%;
+            padding: 5px;
+        }
+        .search-box button {
+            padding: 5px;
+        }
+        #search-results {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+            display: none; /* Hidden by default */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Welcome to Frankie's Tokyo Restaurant Guide</h1>
+    <div class="summary-box">
+        <h2>今まで行った店の一覧</h2>
+        <p><strong>Ramen:</strong> {{ ramen_visit_cnt }}/100軒</p>
+        <p><strong>Unagi:</strong> {{ unagi_visit_cnt }}/100軒</p>
+        <p><strong>Sushi:</strong> {{ sushi_visit_cnt }}/100軒</p>
+    </div>
+
+    <div class="roulette-box">
+        <h2>今日のおすすめ</h2>
+        {% if selected_shop is not none %}
+            <p><strong>お店:</strong> {{ selected_shop['name'] }}<br>
+            <strong>近くの駅:</strong> {{ selected_shop['station'] }}<br>
+            <strong>Rating:</strong> {{ selected_shop['rating'] }}</p>
+        {% endif %}
+
+    </div>
+
+    <p>駅近くの店を探す:</p>
+    <!-- Search Bar -->
+    <div class="search-box">
+        <input type="text" id="stationInput" placeholder="駅を入力してください...">
+        <button id="searchButton">Search</button>
+    </div>
+
+    <div id="search-results"></div>
+    <p>Discover the top restaurants in Tokyo on the map!</p>
+    <p><a href="/ramen">Explore Ramen Restaurants</a></p>
+    <p><a href="/unagi">Explore Unagi Restaurants</a></p>
+    <p><a href="/sushi">Explore Sushi Restaurants</a></p>
+
+    <script>
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const stationName = document.getElementById('stationInput').value;
+            if (stationName) {
+                fetch(`/search_restaurants?station=${encodeURIComponent(stationName)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const resultsDiv = document.getElementById('search-results');
+                        resultsDiv.innerHTML = ''; // Clear previous results
+                        if (data.restaurants.length > 0) {
+                            data.restaurants.forEach(restaurant => {
+                                const p = document.createElement('p');
+                                p.textContent = restaurant.name + ' - ' + restaurant.station + ' - ' + restaurant.rating;
+                                resultsDiv.appendChild(p);
+                            });
+                            resultsDiv.style.display = 'block'; // Show results
+                        } else {
+                            resultsDiv.innerHTML = '<p>No restaurants found for this station.</p>';
+                            resultsDiv.style.display = 'block'; // Show message
+                        }
+                    })
+                    .catch(error => console.error('Error fetching restaurants:', error));
+            } else {
+                alert('Please enter a station name.');
+            }
+        });
+    </script>
+</body>
+</html>

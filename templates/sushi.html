@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ラーメン　ガイド</title>
+    <title>お寿司　ガイド</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.awesome-markers/dist/leaflet.awesome-markers.css" />
     <style>
@@ -13,7 +13,7 @@
     </style>
 </head>
 <body>
-    <h1>東京ラーメン　ガイド</h1>
+    <h1>東京お寿司　ガイド</h1>
     <div id="map"></div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.awesome-markers/dist/leaflet.awesome-markers.js"></script>
@@ -46,7 +46,7 @@
 
         // Function to toggle visited status
         function toggleVisited(idx) {
-            fetch(`/toggle_visited/${idx}`, {
+            fetch(`/toggle_visited/sushi/${idx}`, {
                 method: 'POST'
             })
             .then(response => response.json())
