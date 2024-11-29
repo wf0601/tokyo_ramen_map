@@ -41,6 +41,7 @@ def index_ramen():
         icon_color = 'red' if row['visited'] else 'blue'
         markers.append({
             'location': [row['latitude'], row['longitude']],
+            'rating': row['rating'],
             #'popup': f"{row['name']} {row['rating']}<br><input type='checkbox' id='checkbox_{idx}' onchange='toggleVisited({idx})' {'checked' if row['visited'] else ''}> Visited",
             'popup':f"""
     {row['name']} {row['rating']}<br>

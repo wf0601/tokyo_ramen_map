@@ -33,6 +33,10 @@
 </head>
 <body>
     <h1>東京ラーメン　ガイド</h1>
+    <div>
+        <label for="ratingSlider">Min. Rating: <span id="ratingValue">4.0</span></label>
+        <input type="range" id="ratingSlider" min="3.5" max="4.0" step="0.02" value="4.0" />
+    </div>
     <div id="map"></div>
 
     <!-- Modal for writing reviews -->
@@ -67,12 +71,40 @@
                 })
             }).bindPopup(`
                 <div>
-                    <strong>{{ marker.popup|safe }}</strong>
+                    <strong>{{ marker.popup|safe }}</strong> 
                 </div>
             `).addTo(map);
 
-            markers[{{ marker.idx }}] = marker;
+            // markers[{{ marker.idx }}] = marker;
+            markers[{{ marker.idx }}] = { marker: marker, rating: {{ marker.rating }} };
+
         {% endfor %}
+
+
+        // Function to filter markers based on rating
+        function filterMarkersByRating() {
+            const minRating = parseFloat(document.getElementById('ratingSlider').value); // Get the slider value
+
+            for (const idx in markers) {
+                const markerData = markers[idx];
+                const rating = markerData.rating; // Access the rating from the stored data
+
+                // Show only markers with rating >= minRating
+                if (rating >= minRating) {
+                    markerData.marker.addTo(map); // Add marker to the map
+                } else {
+                    map.removeLayer(markerData.marker); // Remove marker from the map
+                }
+            }
+        }
+
+        // Add event listener to the slider
+        document.getElementById('ratingSlider').addEventListener('input', function() {
+            document.getElementById('ratingValue').innerText = this.value; // Update displayed value
+            filterMarkersByRating(); // Call the filter function
+        });
+
+
 
         // Function to toggle visited status
         function toggleVisited(idx) {
