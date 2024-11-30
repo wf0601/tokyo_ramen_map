@@ -50,10 +50,11 @@ def index_cuisine(cuisine):
         
         markers.append({
             'location': [row['latitude'], row['longitude']],
+            'url': row['url'],
             'rating': row['rating'],
             'reviews': row['reviews'] if 'reviews' in row else '',
             'popup': f"""
-        {row['name']} {row['rating']}<br>
+        <a href="{row['url']}" target="_blank">{row['name']}</a> <span style="color: black;">{row['rating']}</span><br>
         <input type='checkbox' id='checkbox_{idx}' onchange='toggleVisited({idx})' {'checked' if row['visited'] else ''}> Visited<br>
         <a href="#" onclick="openReviewModal({idx}, '{row['name']}')">My Note</a>
     """,

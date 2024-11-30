@@ -71,7 +71,7 @@
                 })
             }).bindPopup(`
                 <div>
-                    <strong>{{ marker.popup|safe }}</strong><br>
+                    <strong><a href="{{ marker.url }}" target="_blank">{{ marker.popup|safe }}</a></strong> <!-- Restaurant name as hyperlink -->
                 </div>
                 </div>
             `).addTo(map);
