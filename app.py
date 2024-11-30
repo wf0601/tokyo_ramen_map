@@ -23,6 +23,7 @@ def load_cuisine_data(cuisine_mapping):
         # Convert geo-coordinates
         data[['latitude', 'longitude']] = data['geo_coordinates'].str.split(',', expand=True).astype(float)
         data_frames[cuisine] = data
+        data_frames[cuisine].to_csv(data_file,index=False)
     return data_frames
 
 # Load the cuisine mapping and data
@@ -57,7 +58,7 @@ def index_cuisine(cuisine):
             'icon_color': icon_color,
             'idx': idx
         })
-        print(markers[0])
+        # print(markers[0])
 
     return render_template('cuisine.html', markers=markers, title=title, visited_count=visited_count, cuisine=cuisine)
 
@@ -88,7 +89,7 @@ def save_review(cuisine, idx):
         return jsonify(success=False, error="Invalid index"), 400
 
     review = request.get_json().get('review', '')
-    print(review)
+    # print(review)
 
     # Ensure the 'reviews' column exists
     if 'reviews' not in data.columns:
@@ -103,28 +104,27 @@ def save_review(cuisine, idx):
 
 @app.route('/')
 def landing_page():
-    ramen_visit_cnt = cuisine_data['ramen']['visited'].sum()
-    unagi_visit_cnt = cuisine_data['unagi']['visited'].sum()
-    sushi_visit_cnt = cuisine_data['sushi']['visited'].sum()
+    cuisines = ['ramen', 'unagi', 'sushi']
     
-    unvisited_ramen = cuisine_data['ramen'][cuisine_data['ramen']['visited'] == False]
-    unvisited_unagi = cuisine_data['unagi'][cuisine_data['unagi']['visited'] == False]
-    unvisited_sushi = cuisine_data['sushi'][cuisine_data['sushi']['visited'] == False]
-
-    selected_ramen = unvisited_ramen.sample(n=1).iloc[0] if not unvisited_ramen.empty else None
-    selected_unagi = unvisited_unagi.sample(n=1).iloc[0] if not unvisited_unagi.empty else None
-    selected_sushi = unvisited_sushi.sample(n=1).iloc[0] if not unvisited_sushi.empty else None
-    selected_shops = [selected_ramen, selected_unagi, selected_sushi]
+    restaurant_counts = {cuisine: len(cuisine_data[cuisine]) for cuisine in cuisines}
+    
+    visit_counts = {cuisine: cuisine_data[cuisine]['visited'].sum() for cuisine in cuisines}
+    unvisited_shops = {
+        cuisine: cuisine_data[cuisine][cuisine_data[cuisine]['visited'] == False] for cuisine in cuisines
+    }
+    selected_shops = [
+        unvisited.sample(n=1).iloc[0] if not unvisited.empty else None 
+        for unvisited in unvisited_shops.values()
+    ]
     selected_shops = [shop for shop in selected_shops if shop is not None]
-
-    # Randomly select one shop if there are any available
     selected_shop = random.choice(selected_shops) if selected_shops else None
 
-    return render_template('landing.html',
-                           ramen_visit_cnt=ramen_visit_cnt,
-                           unagi_visit_cnt=unagi_visit_cnt,
-                           sushi_visit_cnt=sushi_visit_cnt,
-                           selected_shop=selected_shop)
+    return render_template(
+        'landing.html',
+        visit_counts=visit_counts,  # Pass the dictionary
+        selected_shop=selected_shop,
+        restaurant_counts=restaurant_counts # dictionary
+    )
 
 @app.route('/search_restaurants')
 def search_restaurants():

@@ -15,18 +15,22 @@
             background-repeat: no-repeat;
             height: 100vh;
             margin: 0;
+            position: relative;
         }
 
         h1 {
             color: #333;
         }
         .summary-box {
-            margin: 20px auto;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            width: 300px;
-            background-color: #f9f9f9;
+            position: absolute; /* Position it absolutely */
+            right: 100px; /* Distance from the right edge */
+            top: 120px; /* Distance from the top edge */
+            width: 200px; /* Set a width for the box */
+            padding: 15px; /* Add some padding */
+            background-color: #f9f9f9; /* Background color */
+            border: 1px solid #ccc; /* Border for the box */
+            border-radius: 5px; /* Rounded corners */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Optional shadow for depth */
         }
         .roulette-box {
             margin: 20px auto;
@@ -64,9 +68,9 @@
     <h1>Welcome to Frankie's Tokyo Restaurant Guide</h1>
     <div class="summary-box">
         <h2>今まで行った店の一覧</h2>
-        <p><strong>Ramen:</strong> {{ ramen_visit_cnt }}/100 軒</p>
-        <p><strong>Unagi:</strong> {{ unagi_visit_cnt }}/100 軒</p>
-        <p><strong>Sushi:</strong> {{ sushi_visit_cnt }}/100 軒</p>
+        {% for cuisine in visit_counts.keys() %}
+        <p><strong>{{ cuisine.capitalize() }}:</strong> {{ visit_counts[cuisine] }}/{{restaurant_counts[cuisine]}}軒</p>
+    {% endfor %}
     </div>
 
     <div class="roulette-box">
@@ -76,7 +80,6 @@
             <strong>近くの駅:</strong> {{ selected_shop['station'] }}<br>
             <strong>Rating:</strong> {{ selected_shop['rating'] }}</p>
         {% endif %}
-
     </div>
 
     <p>駅近くの店を探す:</p>
