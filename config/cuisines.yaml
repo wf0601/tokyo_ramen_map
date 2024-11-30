@@ -8,3 +8,6 @@ cuisines:
   unagi:
     title: "うなぎ"
     data_file: "data/2024_tokyo_unagi_restaurants_all_info.csv"
+  yakitori:
+    title: "焼き鳥"
+    data_file: "data/2024_tokyo_yakitori_restaurants_all_info.csv"

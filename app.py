@@ -29,6 +29,8 @@ def load_cuisine_data(cuisine_mapping):
 # Load the cuisine mapping and data
 cuisine_mapping = load_cuisine_mapping()
 cuisine_data = load_cuisine_data(cuisine_mapping)
+cuisines = list(cuisine_mapping['cuisines'].keys())
+print(cuisines)
 
 @app.route('/<cuisine>')
 def index_cuisine(cuisine):
@@ -103,9 +105,7 @@ def save_review(cuisine, idx):
     return jsonify(success=True)
 
 @app.route('/')
-def landing_page():
-    cuisines = ['ramen', 'unagi', 'sushi']
-    
+def landing_page():    
     restaurant_counts = {cuisine: len(cuisine_data[cuisine]) for cuisine in cuisines}
     
     visit_counts = {cuisine: cuisine_data[cuisine]['visited'].sum() for cuisine in cuisines}
