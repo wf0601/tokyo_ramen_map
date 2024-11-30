@@ -11,3 +11,6 @@ cuisines:
   yakitori:
     title: "焼き鳥"
     data_file: "data/2024_tokyo_yakitori_restaurants_all_info.csv"
+  tonkatsu:  
+    title: "とんかつ"
+    data_file: "data/2024_tokyo_tonkatsu_restaurants_all_info.csv"  

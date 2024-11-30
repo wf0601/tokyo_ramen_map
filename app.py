@@ -112,6 +112,7 @@ def landing_page():
     unvisited_shops = {
         cuisine: cuisine_data[cuisine][cuisine_data[cuisine]['visited'] == False] for cuisine in cuisines
     }
+    jp_title = {cuisine: cuisine_mapping['cuisines'][cuisine]['title'] for cuisine in cuisines}
     selected_shops = [
         unvisited.sample(n=1).iloc[0] if not unvisited.empty else None 
         for unvisited in unvisited_shops.values()
@@ -122,6 +123,7 @@ def landing_page():
     return render_template(
         'landing.html',
         visit_counts=visit_counts,  # Pass the dictionary
+        title = jp_title,
         selected_shop=selected_shop,
         restaurant_counts=restaurant_counts # dictionary
     )

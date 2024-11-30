@@ -69,7 +69,7 @@
     <div class="summary-box">
         <h2>今まで行った店の一覧</h2>
         {% for cuisine in visit_counts.keys() %}
-        <p><strong>{{ cuisine.capitalize() }}:</strong> {{ visit_counts[cuisine] }}/{{restaurant_counts[cuisine]}}軒</p>
+        <p><strong>{{ title[cuisine] }}:</strong> {{ visit_counts[cuisine] }}/{{restaurant_counts[cuisine]}}軒</p>
     {% endfor %}
     </div>
 
@@ -95,6 +95,8 @@
     <p><a href="/unagi">Explore Unagi Restaurants</a></p>
     <p><a href="/sushi">Explore Sushi Restaurants</a></p>
     <p><a href="/yakitori">Explore Yakitori Restaurants</a></p>
+    <p><a href="/tonkatsu">Explore Tonkatsu Restaurants</a></p>
+    
 
     <script>
         document.getElementById('searchButton').addEventListener('click', function() {
