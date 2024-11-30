@@ -130,7 +130,6 @@
         
             // Fetch the existing review from the markers object
             const existingReview = markers[idx].reviews || '';
-            console.log('Existing review for restaurant:', markers[idx].rating);
             document.getElementById('reviewText').value = existingReview; // Set the existing review in the textarea
         
             document.getElementById('reviewModal').style.display = 'block'; // Show the modal
