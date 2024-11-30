@@ -1,0 +1,10 @@
+cuisines:
+  ramen:
+    title: "ラーメン"
+    data_file: "data/tokyo_ramen_restaurants_all_info.csv"
+  sushi:
+    title: "お寿司"
+    data_file: "data/tokyo_sushi_restaurants_all_info.csv"
+  unagi:
+    title: "うなぎ"
+    data_file: "data/tokyo_unagi_restaurants_all_info.csv"

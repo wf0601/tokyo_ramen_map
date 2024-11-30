@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.awesome-markers/dist/leaflet.awesome-markers.css" />
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+        }
+        #reviewModal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto; /* 15% from the top and centered */
+            padding: 20px;
+            border: 1px solid #888;
+            width: 300px; /* Could be more or less, depending on screen size */
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ title }}</h1>
+    <div>
+        <label for="ratingSlider">Min. Rating: <span id="ratingValue">4.0</span></label>
+        <input type="range" id="ratingSlider" min="3.5" max="4.0" step="0.02" value="4.0" />
+    </div>
+    <div id="map"></div>
+
+    <!-- Modal for writing reviews -->
+    <div id="reviewModal">
+        <div class="modal-content">
+            <h3>Write Your Review</h3>
+            <textarea id="reviewText" rows="4" cols="30" placeholder="Enter your review here..."></textarea><br>
+            <button id="saveReviewButton">Save Review</button>
+            <button onclick="closeReviewModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.awesome-markers/dist/leaflet.awesome-markers.js"></script>
+    <script>
+        // Initialize the map
+        var map = L.map('map').setView([{{ markers[0].location[0] }}, {{ markers[0].location[1] }}], 12);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Add markers
+        var markers = {};
+        {% for marker in markers %}
+            var marker = L.marker([{{ marker.location[0] }}, {{ marker.location[1] }}], {
+                icon: L.AwesomeMarkers.icon({
+                    icon: 'info-sign',
+                    markerColor: '{{ marker.icon_color }}',
+                })
+            }).bindPopup(`
+                <div>
+                    <strong>{{ marker.popup|safe }}</strong><br>
+                </div>
+                </div>
+            `).addTo(map);
+
+            markers[{{ marker.idx }}] = { marker: marker, rating: {{ marker.rating }}, reviews: {{marker.reviews|tojson}} };
+
+        {% endfor %}
+
+        // Function to filter markers based on rating
+        function filterMarkersByRating() {
+            const minRating = parseFloat(document.getElementById('ratingSlider').value); // Get the slider value
+
+            for (const idx in markers) {
+                const markerData = markers[idx];
+                const rating = markerData.rating; // Access the rating from the stored data
+
+                // Show only markers with rating >= minRating
+                if (rating >= minRating) {
+                    markerData.marker.addTo(map); // Add marker to the map
+                } else {
+                    map.removeLayer(markerData.marker); // Remove marker from the map
+                }
+            }
+        }
+
+        // Add event listener to the slider
+        document.getElementById('ratingSlider').addEventListener('input', function() {
+            document.getElementById('ratingValue').innerText = this.value; // Update displayed value
+            filterMarkersByRating(); // Call the filter function
+        });
+
+        // Function to toggle visited status
+        function toggleVisited(idx) {
+            fetch(`/toggle_visited/{{ cuisine }}/${idx}`, {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var marker = markers[idx];
+                    var color = data.visited ? 'red' : 'blue';
+                    marker.marker.setIcon(L.AwesomeMarkers.icon({
+                        icon: 'info-sign',
+                        markerColor: color
+                    }));
+                }
+            });
+        }
+
+        // Function to open the review modal
+        let currentMarkerIdx = null; // To store the current marker index
+
+        function openReviewModal(idx, restaurantName) {
+            currentMarkerIdx = idx; // Store the index of the marker
+            document.getElementById('reviewText').value = ''; // Clear the review text area
+        
+            // Fetch the existing review from the markers object
+            const existingReview = markers[idx].reviews || '';
+            console.log('Existing review for restaurant:', markers[idx].rating);
+            document.getElementById('reviewText').value = existingReview; // Set the existing review in the textarea
+        
+            document.getElementById('reviewModal').style.display = 'block'; // Show the modal
+        }
+
+        // Function to close the review modal
+        function closeReviewModal() {
+            document.getElementById('reviewModal').style.display = 'none'; // Hide the modal
+        }
+
+        // Save review button event listener
+        document.getElementById('saveReviewButton').addEventListener('click', function() {
+            const review = document.getElementById('reviewText').value;
+            if (currentMarkerIdx !== null && review) {
+                // Send the review to the server
+                fetch(`/save_review/{{ cuisine }}/${currentMarkerIdx}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ review: review })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Review saved successfully!');
+                        
+                        // Update the markers object with the new review
+                        markers[currentMarkerIdx].reviews = review; // Update the review in the markers object
+                        
+                        closeReviewModal(); // Close the modal
+                    } else {
+                        alert('Error saving review: ' + data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            } else {
+                alert('Please enter a review.');
+            }
+        });
+    </script>
+</body>
+</html>
