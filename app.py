@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import random
 import yaml
+import numpy as np
 
 app = Flask(__name__)
 
@@ -47,14 +48,20 @@ def index_cuisine(cuisine):
     markers = []
     for idx, row in data.iterrows():
         icon_color = 'red' if row['visited'] else 'blue'
+        holiday_value = row['holiday'] if not pd.isna(row['holiday']) and row['holiday'] != np.nan else '-'
+        has_awards = pd.notna(row['awards']) and row['awards'] != ''
+        print(has_awards)
         
         markers.append({
             'location': [row['latitude'], row['longitude']],
             'url': row['url'],
             'rating': row['rating'],
+            'holiday': holiday_value,
+            'awards': has_awards,
             'reviews': row['reviews'] if 'reviews' in row else '',
             'popup': f"""
         <a href="{row['url']}" target="_blank">{row['name']}</a> <span style="color: black;">{row['rating']}</span><br>
+        <span style="color: black;">定休日: {holiday_value}</span><br>
         <input type='checkbox' id='checkbox_{idx}' onchange='toggleVisited({idx})' {'checked' if row['visited'] else ''}> Visited<br>
         <a href="#" onclick="openReviewModal({idx}, '{row['name']}')">My Note</a>
     """,

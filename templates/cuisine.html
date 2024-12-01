@@ -37,6 +37,11 @@
         <label for="ratingSlider">Min. Rating: <span id="ratingValue">3.5</span></label>
         <input type="range" id="ratingSlider" min="3.5" max="4.0" step="0.02" value="3.5" />
     </div>
+    <div>
+        <label>
+            <input type="checkbox" id="awardFilterCheckbox"> 百名店のみ表示
+        </label>
+    </div>
     <div id="map"></div>
 
     <!-- Modal for writing reviews -->
@@ -76,9 +81,32 @@
                 </div>
             `).addTo(map);
 
-            markers[{{ marker.idx }}] = { marker: marker, rating: {{ marker.rating }}, reviews: {{marker.reviews|tojson}} };
+            markers[{{ marker.idx }}] = { marker: marker, rating: {{ marker.rating }}, reviews: {{marker.reviews|tojson}}, awards: {{ 'true' if marker.awards else 'false' }}, };
 
         {% endfor %}
+        // Function to filter markers based on awards
+        function filterMarkersByAwards() {
+            const showAwardsOnly = document.getElementById('awardFilterCheckbox').checked;
+
+            for (const idx in markers) {
+                const markerData = markers[idx];
+                const hasAwards = markerData.awards; // Check if awards is true
+
+                // Show or hide markers based on checkbox state
+                if (showAwardsOnly) {
+                    if (hasAwards) {
+                        map.addLayer(markerData.marker); // Add marker to the map if it has awards
+                    } else {
+                        map.removeLayer(markerData.marker); // Remove marker from the map if it doesn't have awards
+                    }
+                } else {
+                    map.addLayer(markerData.marker); // Show all markers if checkbox is not checked
+                }
+            }
+        }
+
+        // Add event listener to the checkbox
+        document.getElementById('awardFilterCheckbox').addEventListener('change', filterMarkersByAwards);
 
         // Function to filter markers based on rating
         function filterMarkersByRating() {

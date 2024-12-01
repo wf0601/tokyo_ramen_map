@@ -61,6 +61,11 @@
             background-color: #f9f9f9;
             display: none; /* Hidden by default */
         }
+        #dateDisplay {
+            margin-top: 20px; /* Adjust this value for more or less space */
+            font-size: 18px; /* Optional: Adjust font size */
+            color: #333; /* Optional: Adjust text color */
+        }
 
     </style>
 </head>
@@ -75,6 +80,7 @@
 
     <div class="roulette-box">
         <h2>今日のおすすめ</h2>
+        <p id="dateDisplay"></p> 
         {% if selected_shop is not none %}
             <p><strong>お店:</strong> {{ selected_shop['name'] }}<br>
             <strong>近くの駅:</strong> {{ selected_shop['station'] }}<br>
@@ -124,6 +130,20 @@
                 alert('Please enter a station name.');
             }
         });
+    </script>
+    <script>
+        // Function to display the current date and weekday
+        function displayCurrentDate() {
+            const dateDisplay = document.getElementById('dateDisplay');
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', locale: 'ja-JP' };
+            const currentDate = new Date().toLocaleDateString('ja-JP', options);
+            dateDisplay.textContent = currentDate; // Set the text content to the formatted date
+        }
+
+        // Call the function to display the date when the page loads
+        displayCurrentDate();
+
+        // ... existing JavaScript code ...
     </script>
 </body>
 </html>
