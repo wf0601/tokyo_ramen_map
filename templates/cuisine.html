@@ -43,7 +43,36 @@
         </label>
     </div>
     <div id="map"></div>
+    <div>
+        <label for="monthSelect">Month:</label>
+        <select id="monthSelect">
+            <option value="">Select Month</option>
+            <option value="1">January</option>
+            <option value="2">February</option>
+            <option value="3">March</option>
+            <option value="4">April</option>
+            <option value="5">May</option>
+            <option value="6">June</option>
+            <option value="7">July</option>
+            <option value="8">August</option>
+            <option value="9">September</option>
+            <option value="10">October</option>
+            <option value="11">November</option>
+            <option value="12">December</option>
+        </select>
 
+        <label for="yearSelect">Year:</label>
+        <select id="yearSelect">
+            <option value="">Select Year</option>
+            <!-- Populate years dynamically or manually -->
+            <script>
+                const currentYear = new Date().getFullYear();
+                for (let i = currentYear; i >= 2000; i--) {
+                    document.write(`<option value="${i}">${i}</option>`);
+                }
+            </script>
+        </select>
+    </div>
     <!-- Modal for writing reviews -->
     <div id="reviewModal">
         <div class="modal-content">
@@ -53,7 +82,32 @@
             <button onclick="closeReviewModal()">Cancel</button>
         </div>
     </div>
-
+    <div id="visitDateModal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5);">
+        <div style="background-color: #fff; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 300px;">
+            <h3>Select Visit Date</h3>
+            <label for="visitMonth">Month:</label>
+            <select id="visitMonth">
+                <option value="">Select Month</option>
+                <option value="1">January</option>
+                <option value="2">February</option>
+                <!-- Add remaining months -->
+            </select>
+            <br>
+            <label for="visitYear">Year:</label>
+            <select id="visitYear">
+                <option value="">Select Year</option>
+                <script>
+                    const currentYear = new Date().getFullYear();
+                    for (let i = currentYear; i >= 2000; i--) {
+                        document.write(`<option value="${i}">${i}</option>`);
+                    }
+                </script>
+            </select>
+            <br>
+            <button onclick="saveVisitDate()">Save</button>
+            <button onclick="closeVisitDateModal()">Cancel</button>
+        </div>
+    </div>
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.awesome-markers/dist/leaflet.awesome-markers.js"></script>
     <script>
@@ -84,6 +138,46 @@
             markers[{{ marker.idx }}] = { marker: marker, rating: {{ marker.rating }}, reviews: {{marker.reviews|tojson}}, awards: {{ 'true' if marker.awards else 'false' }}, };
 
         {% endfor %}
+
+        function toggleVisited(idx) {
+            const month = document.getElementById('monthSelect').value;
+            const year = document.getElementById('yearSelect').value;
+    
+            if (document.getElementById(`checkbox_${idx}`).checked) {
+                if (month && year) {
+                    const visitDate = `${year}-${month.padStart(2, '0')}`; // Format as YYYY-MM
+                    console.log(`Visited on: ${visitDate}`); // Log the visit date
+    
+                    // Send the visit date to the server to save it
+                    fetch('/update_visit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ restaurantId: idx, visitDate: visitDate })
+                    }).then(response => response.json())
+                      .then(data => console.log(data.message))
+                      .catch(error => console.error('Error:', error));
+                } else {
+                    alert('Please select both month and year.');
+                    document.getElementById(`checkbox_${idx}`).checked = false; // Uncheck if no date is selected
+                }
+            } else {
+                // If unchecked, clear the visit date
+                console.log(`Clearing visit date for restaurant ID: ${idx}`);
+    
+                // Send a request to clear the visit date
+                fetch('/clear_visit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ restaurantId: idx })
+                }).then(response => response.json())
+                  .then(data => console.log(data.message))
+                  .catch(error => console.error('Error:', error));
+            }
+        }        
         // Function to filter markers based on awards
         function filterMarkersByAwards() {
             const showAwardsOnly = document.getElementById('awardFilterCheckbox').checked;
@@ -132,22 +226,68 @@
         });
 
         // Function to toggle visited status
-        function toggleVisited(idx) {
-            fetch(`/toggle_visited/{{ cuisine }}/${idx}`, {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    var marker = markers[idx];
-                    var color = data.visited ? 'red' : 'blue';
-                    marker.marker.setIcon(L.AwesomeMarkers.icon({
-                        icon: 'info-sign',
-                        markerColor: color
-                    }));
+        <script>
+            let currentMarkerIdxForVisit = null;
+        
+            // Function to toggle visited status
+            function toggleVisited(idx) {
+                const checkbox = document.getElementById(`checkbox_${idx}`);
+                if (checkbox.checked) {
+                    currentMarkerIdxForVisit = idx; // Store the current marker index
+                    openVisitDateModal();
+                } else {
+                    // Clear the visit date
+                    fetch('/clear_visit', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ restaurantId: idx })
+                    }).then(response => response.json())
+                      .then(data => {
+                          if (data.success) {
+                              alert('Visit date cleared successfully!');
+                          } else {
+                              alert('Error clearing visit date: ' + data.error);
+                          }
+                      });
                 }
-            });
-        }
+            }
+        
+            function openVisitDateModal() {
+                document.getElementById('visitDateModal').style.display = 'block';
+            }
+        
+            function closeVisitDateModal() {
+                document.getElementById('visitDateModal').style.display = 'none';
+                document.getElementById(`checkbox_${currentMarkerIdxForVisit}`).checked = false; // Uncheck if modal is canceled
+            }
+        
+            function saveVisitDate() {
+                const month = document.getElementById('visitMonth').value;
+                const year = document.getElementById('visitYear').value;
+        
+                if (!month || !year) {
+                    alert('Please select both month and year.');
+                    return;
+                }
+        
+                const visitDate = `${year}-${String(month).padStart(2, '0')}`;
+                
+                // Send the visit date to the server
+                fetch('/update_visit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ restaurantId: currentMarkerIdxForVisit, visitDate: visitDate })
+                }).then(response => response.json())
+                  .then(data => {
+                      if (data.success) {
+                          alert('Visit date saved successfully!');
+                          closeVisitDateModal(); // Close the modal
+                      } else {
+                          alert('Error saving visit date: ' + data.error);
+                      }
+                  }).catch(error => console.error('Error:', error));
+            }
+        </script>
 
         // Function to open the review modal
         let currentMarkerIdx = null; // To store the current marker index

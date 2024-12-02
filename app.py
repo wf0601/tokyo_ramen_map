@@ -50,7 +50,6 @@ def index_cuisine(cuisine):
         icon_color = 'red' if row['visited'] else 'blue'
         holiday_value = row['holiday'] if not pd.isna(row['holiday']) and row['holiday'] != np.nan else '-'
         has_awards = pd.notna(row['awards']) and row['awards'] != ''
-        print(has_awards)
         
         markers.append({
             'location': [row['latitude'], row['longitude']],
@@ -59,11 +58,13 @@ def index_cuisine(cuisine):
             'holiday': holiday_value,
             'awards': has_awards,
             'reviews': row['reviews'] if 'reviews' in row else '',
+            'visited': row.get('visit_date', None),
             'popup': f"""
         <a href="{row['url']}" target="_blank">{row['name']}</a> <span style="color: black;">{row['rating']}</span><br>
         <span style="color: black;">定休日: {holiday_value}</span><br>
         <input type='checkbox' id='checkbox_{idx}' onchange='toggleVisited({idx})' {'checked' if row['visited'] else ''}> Visited<br>
         <a href="#" onclick="openReviewModal({idx}, '{row['name']}')">My Note</a>
+        <span style="color: black;">Visited on: {row.get('visit_date', 'Not visited')}</span>
     """,
             'icon_color': icon_color,
             'idx': idx
@@ -151,6 +152,38 @@ def search_restaurants():
     top_restaurants = sorted(restaurants, key=lambda x: x['rating'], reverse=True)[:3]    
 
     return jsonify(restaurants=top_restaurants)
+@app.route('/update_visit', methods=['POST'])
+def update_visit():
+    data = request.get_json()
+    restaurant_id = data.get('restaurantId')
+    visit_date = data.get('visitDate')
+    cuisine = 'your_cuisine'  # Replace with the correct cuisine context if needed
 
+    if not cuisine or cuisine not in cuisine_mapping['cuisines']:
+        return jsonify(success=False, error="Invalid cuisine"), 400
+
+    if restaurant_id is None or not visit_date:
+        return jsonify(success=False, error="Missing restaurant ID or visit date"), 400
+
+    cuisine_data[cuisine].at[restaurant_id, 'visit_date'] = visit_date
+    cuisine_data[cuisine].to_csv(cuisine_mapping['cuisines'][cuisine]['data_file'], index=False)
+    return jsonify(success=True)
+
+
+@app.route('/clear_visit', methods=['POST'])
+def clear_visit():
+    data = request.get_json()
+    restaurant_id = data.get('restaurantId')
+    cuisine = 'your_cuisine'  # Replace with the correct cuisine context if needed
+
+    if not cuisine or cuisine not in cuisine_mapping['cuisines']:
+        return jsonify(success=False, error="Invalid cuisine"), 400
+
+    if restaurant_id is None:
+        return jsonify(success=False, error="Missing restaurant ID"), 400
+
+    cuisine_data[cuisine].at[restaurant_id, 'visit_date'] = None
+    cuisine_data[cuisine].to_csv(cuisine_mapping['cuisines'][cuisine]['data_file'], index=False)
+    return jsonify(success=True)
 if __name__ == '__main__':
     app.run(debug=True, port=5002)
