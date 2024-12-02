@@ -21,7 +21,8 @@ for file_name in os.listdir(orig_data_folder):
         # Add the 'type' column
         df['type'] = file_type
         
-        df_filtered = df.iloc[:100]
+        # df_filtered = df.iloc[:100]
+        df_filtered = df
         df_filtered = df_filtered.query('rating>=3.5')
 
 
