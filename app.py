@@ -16,6 +16,7 @@ def load_cuisine_mapping():
 def load_cuisine_data(cuisine_mapping):
     data_frames = {}
     for cuisine, info in cuisine_mapping['cuisines'].items():
+        print(cuisine)
         data_file = info['data_file']
         data = pd.read_csv(data_file)
         # Ensure 'visited' column exists
@@ -23,6 +24,7 @@ def load_cuisine_data(cuisine_mapping):
             data['visited'] = False
         # Convert geo-coordinates
         data[['latitude', 'longitude']] = data['geo_coordinates'].str.split(',', expand=True).astype(float)
+        data['broad_genre'] = cuisine
         data_frames[cuisine] = data
         data_frames[cuisine].to_csv(data_file,index=False)
     return data_frames
@@ -32,7 +34,9 @@ cuisine_mapping = load_cuisine_mapping()
 cuisine_data = load_cuisine_data(cuisine_mapping)
 cuisines = list(cuisine_mapping['cuisines'].keys())
 print(cuisines)
-
+for cuisine in cuisine_mapping['cuisines']:
+    data = cuisine_data[cuisine]
+    #print(f"Unique genres in {cuisine}: {data['genre'].unique()}")
 @app.route('/<cuisine>')
 def index_cuisine(cuisine):
     if cuisine not in cuisine_mapping['cuisines']:
@@ -136,19 +140,44 @@ def landing_page():
         restaurant_counts=restaurant_counts # dictionary
     )
 
+# @app.route('/search_restaurants')
+# def search_restaurants():
+#     station_name = request.args.get('station', '').lower()
+    
+#     # Filter restaurants based on the station name
+#     restaurants = []
+#     for cuisine in cuisine_mapping['cuisines']:
+#         data = cuisine_data[cuisine]
+#         filtered = data[data['station'].str.lower().str.contains(station_name, na=False)]
+#         for idx, row in filtered.iterrows():
+#             restaurants.append({'name': row['name'], 'station': row['station'], 'rating': row['rating']})
+        
+#     top_restaurants = sorted(restaurants, key=lambda x: x['rating'], reverse=True)[:3]    
+
+#     return jsonify(restaurants=top_restaurants)
 @app.route('/search_restaurants')
 def search_restaurants():
     station_name = request.args.get('station', '').lower()
-    
+    genre = request.args.get('broad_genre', 'all')  # Get the genre from the request, default to 'all'
+
     # Filter restaurants based on the station name
     restaurants = []
     for cuisine in cuisine_mapping['cuisines']:
         data = cuisine_data[cuisine]
         filtered = data[data['station'].str.lower().str.contains(station_name, na=False)]
+
         for idx, row in filtered.iterrows():
-            restaurants.append({'name': row['name'], 'station': row['station'], 'rating': row['rating']})
-        
-    top_restaurants = sorted(restaurants, key=lambda x: x['rating'], reverse=True)[:3]    
+            # Check if the genre matches or if 'all' is selected
+            if genre == 'all' or (row['broad_genre'] and row['broad_genre'].lower() == genre):
+                restaurants.append({
+                    'name': row['name'],
+                    'station': row['station'],
+                    'rating': row['rating'],
+                    'broad_genre': row['broad_genre']  # Include genre if needed
+                })       
+
+    # Sort the restaurants by rating and get the top 3
+    top_restaurants = sorted(restaurants, key=lambda x: x['rating'], reverse=True)[:3]
 
     return jsonify(restaurants=top_restaurants)
 

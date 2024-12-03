@@ -92,6 +92,15 @@
     <!-- Search Bar -->
     <div class="search-box">
         <input type="text" id="stationInput" placeholder="駅を入力してください...">
+        <select id="genreSelect">
+            <option value="all">All</option>
+            <option value="ramen">ラーメン</option>
+            <option value="sushi">お寿司</option>
+            <option value="unagi">うなぎ</option>
+            <option value="yakitori">焼き鳥</option>
+            <option value="tonkatsu">とんかつ</option>
+            <!-- Add more genres as needed -->
+        </select>
         <button id="searchButton">Search</button>
     </div>
 
@@ -143,7 +152,35 @@
         // Call the function to display the date when the page loads
         displayCurrentDate();
 
-        // ... existing JavaScript code ...
+    </script>
+    <script>
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const stationName = document.getElementById('stationInput').value;
+            const selectedGenre = document.getElementById('genreSelect').value;
+
+            if (stationName) {
+                fetch(`/search_restaurants?station=${encodeURIComponent(stationName)}&broad_genre=${encodeURIComponent(selectedGenre)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const resultsDiv = document.getElementById('search-results');
+                        resultsDiv.innerHTML = ''; // Clear previous results
+                        if (data.restaurants.length > 0) {
+                            data.restaurants.forEach(restaurant => {
+                                const p = document.createElement('p');
+                                p.textContent = restaurant.name + ' - ' + restaurant.station + ' - ' + restaurant.rating;
+                                resultsDiv.appendChild(p);
+                            });
+                            resultsDiv.style.display = 'block'; // Show results
+                        } else {
+                            resultsDiv.innerHTML = '<p>No restaurants found for this station.</p>';
+                            resultsDiv.style.display = 'block'; // Show message
+                        }
+                    })
+                    .catch(error => console.error('Error fetching restaurants:', error));
+            } else {
+                alert('Please enter a station name.');
+            }
+        });
     </script>
 </body>
 </html>
